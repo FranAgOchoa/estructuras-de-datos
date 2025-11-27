@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulación Estricta de Pilas</title>
+    <title>Simulación Estándar de Pilas</title>
     
-    <!-- ESTILOS (CSS) -->
     <style>
+        :root {
+            --primary-color: #4a148c;
+            --accent-color: #2196f3;
+            --bg-light: #e8eaf6;
+            --bg-page: #f0f0f5;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f0f5;
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-page);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -21,15 +27,17 @@
             background-color: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             width: 90%;
-            max-width: 300px;
+            max-width: 400px;
             text-align: center;
+            margin-bottom: 20px;
         }
 
         h1 {
-            color: #4a148c;
+            color: var(--primary-color);
             margin-bottom: 5px;
+            font-size: 1.8em;
         }
         
         .controls {
@@ -49,6 +57,11 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+
         .btn-add {
             background-color: #66bb6a;
             color: white;
@@ -60,8 +73,8 @@
         }
         
         .stack-slots-container {
-            border: 2px solid #ccc;
-            border-radius: 8px;
+            border: 3px solid var(--primary-color);
+            border-radius: 10px;
             padding: 10px;
             margin-top: 20px;
             min-height: 200px;
@@ -69,7 +82,7 @@
             flex-direction: column-reverse;
             align-items: center;
             gap: 10px;
-            background-color: #e8eaf6;
+            background-color: var(--bg-light);
         }
 
         .stack-slot {
@@ -81,7 +94,7 @@
             border-radius: 6px;
             box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
             font-weight: bold;
-            font-size: 0.9em;
+            font-size: 1em;
             color: #333;
             background-color: #f8f8f8; 
             border: 1px dashed #aaa;
@@ -89,8 +102,67 @@
         }
         
         .stack-slot.active {
-            background-color: #2196f3;
+            background-color: var(--accent-color);
             color: white;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-link {
+            margin-top: 30px;
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--accent-color);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            text-align: center;
+            animation: fadeIn 0.3s;
+        }
+        .modal-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .modal-ok-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+        .modal-ok-btn:hover {
+            background-color: #5b21b6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -98,97 +170,114 @@
 <body>
     <div class="container">
         <h1>Simulación de Pila</h1>
-        <p>Límite: 3 elementos. <strong>LIFO</strong></p>
+        <p>Límite: 3 elementos. <strong>LIFO (Last-In, First-Out)</strong></p>
         
-        <!-- Controles -->
         <div class="controls">
             <button class="btn btn-add" onclick="pushElement()">
-                <i></i> Añadir (Push)
+                <i class="fas fa-plus-circle"></i> Añadir (Push)
             </button>
             <button class="btn btn-remove" onclick="popElement()">
-                <i></i> Eliminar (Pop)
+                <i class="fas fa-minus-circle"></i> Eliminar (Pop)
             </button>
         </div>
 
-        <h2>Contenido de la Pila</h2>
+        <h2>Contenido de la Pila (Top)</h2>
         
         <div id="stackSlotsContainer" class="stack-slots-container">
             <div id="slot2" class="stack-slot"></div>
             <div id="slot1" class="stack-slot"></div>
             <div id="slot0" class="stack-slot"></div>
         </div>
+        <p style="font-size: 0.8em; color: #666; margin-top: 10px;">El elemento más alto (TOP) es el siguiente en salir.</p>
         
-        <a href="index.html" style="margin-top: 30px; display: inline-block; color: #4a148c; text-decoration: none;">
+        <a href="index.html" class="back-link">
             ← Volver al Índice
         </a>
     </div>
 
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="modal-title"></h3>
+            <p id="modalBody"></p>
+            <button class="modal-ok-btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
     <script>
         let stack = []; 
         const LIMITE = 3; 
         let elementCounter = 1;
         
-       
-        let hasOverflowed = false; 
-        
+        const modal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+
         const slots = [
             document.getElementById('slot0'), 
             document.getElementById('slot1'),
             document.getElementById('slot2')  
         ];
         
-        function showMessage(title, isError = false) {
-            const prefix = isError ? "ERROR: " : "INFO: ";
-            alert(prefix + title); 
+        function showMessage(title, body, isError = false) {
+            modalTitle.textContent = isError ? "¡ERROR!" : "Información";
+            modalTitle.style.color = isError ? '#ef5350' : '#4a148c'; 
+            modalBody.innerHTML = title + (body ? "<br><strong>" + body + "</strong>" : "");
+            modal.style.display = 'flex';
         }
 
+        function closeModal() {
+            modal.style.display = 'none';
+        }
         
         function updateDisplay() {
-           
             slots.forEach(slot => {
                 slot.textContent = "";
                 slot.className = 'stack-slot'; 
             });
 
-           
             stack.forEach((element, i) => {
                 const currentSlot = slots[i]; 
                 
                 if (currentSlot) {
                     currentSlot.textContent = element;
                     currentSlot.classList.add('active');
+                    if (i === stack.length - 1) {
+                         currentSlot.textContent += " (TOP)";
+                    }
                 }
             });
         }
 
         function pushElement() {
-            if (hasOverflowed) {
-                showMessage("OVERFLOW ESTRICTO: Pila agotada. No se permite insertar (Push).", true);
-                return;
-            }
-
             if (stack.length === LIMITE) {
-                hasOverflowed = true; 
-                showMessage("OVERFLOW: Pila llena. Ya no se permitirá añadir más elementos NUNCA (Pila Agotada).", true);
+                showMessage(
+                    "OVERFLOW: Pila Llena", 
+                    `El límite es ${LIMITE} elementos. No se puede realizar el Push.`, 
+                    true
+                );
                 return;
             }
-
 
             const nuevoElemento = "E" + elementCounter++;
             stack.push(nuevoElemento);
             updateDisplay();
+            showMessage("PUSH Exitoso", `Elemento ${nuevoElemento} ha entrado al TOP.`);
         }
 
         function popElement() {
             if (stack.length === 0) {
-                showMessage("UNDERFLOW: Pila vacía. No hay elementos para eliminar.", true);
+                showMessage(
+                    "UNDERFLOW: Pila Vacía", 
+                    "No hay elementos para eliminar (Pop).", 
+                    true
+                );
                 return;
             }
 
             const elementoBorrado = stack.pop();
             
-            updateDisplay();
-            showMessage("INFO: Elemento " + elementoBorrado + " eliminado. LIFO.", false);
+            updateDisplay(); 
+            
+            showMessage("POP Exitoso", `Elemento ${elementoBorrado} ha sido eliminado (LIFO).`);
         }
 
         document.addEventListener('DOMContentLoaded', updateDisplay);
