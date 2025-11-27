@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Máquina Expendedora (Pilas y Colas)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #eeeeee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .vending-machine {
+            background-color: #cccccc; 
+            padding: 15px;
+            border: 4px solid #333333;
+            width: 90%;
+            max-width: 300px;
+            color: black;
+            text-align: center;
+        }
+
+        .products-grid {
+            display: flex;
+            justify-content: space-around;
+            gap: 5px;
+            margin-bottom: 15px;
+            padding: 5px;
+            background-color: #999999;
+            border: 1px solid #666666;
+        }
+
+        .product-card {
+            background-color: #ffffff;
+            padding: 5px;
+            border: 1px solid #000000;
+            width: 30%;
+            cursor: pointer;
+            margin: 0;
+            font-size: 0.8em;
+        }
+        
+        .product-card:hover {
+            background-color: #ffff99;
+        }
+
+        .product-card.empty {
+            background-color: #f0f0f0;
+            color: #777777;
+            cursor: not-allowed;
+            border: 1px dashed #777777;
+        }
+        
+        .control-panel {
+            background-color: #aaaaaa; 
+            padding: 10px;
+            border: 1px solid #666666;
+            margin-bottom: 10px;
+        }
+
+        #displayMessage {
+            height: 30px;
+            background-color: #000000;
+            color: #00ff00;
+            padding: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1em;
+            overflow: hidden;
+        }
+        
+        #codeInput {
+            width: 80%;
+            padding: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            border: 1px solid black;
+            text-transform: uppercase;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            border: 2px outset #555555;
+            cursor: pointer;
+        }
+
+        #buyBtn {
+            background-color: #ff9900;
+            color: black;
+        }
+        #buyBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .delivery-area {
+            background-color: #dddddd;
+            padding: 10px;
+            border: 1px solid #666666;
+            font-size: 0.85em;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="vending-machine">
+        
+        <h1 style="font-size: 1.5em; margin-bottom: 10px; color: #cc0000;">Máquina Expendedora</h1>
+
+        <div class="products-area">
+            <div class="products-grid" id="productsGrid">
+            </div>
+        </div>
+
+        <div class="control-panel">
+            
+            <div style="margin-bottom: 10px;">
+                <span style="font-size: 0.75em;">SALDO INICIAL:</span>
+                <div id="saldoDisplay" style="font-weight: bold; font-size: 1.5em; color: #009900;">
+                    $100.00
+                </div>
+            </div>
+
+            <div id="displayMessage">
+                INICIE COMPRA
+            </div>
+            
+            <input type="text" id="codeInput" placeholder="CÓDIGO (ej. A1)" >
+
+            <button id="buyBtn" onclick="buyProduct()" class="action-btn">
+                COMPRAR
+            </button>
+        </div>
+
+        <div class="delivery-area">
+            <div id="productDelivery"></div>
+            <div id="changeQueueDisplay">Cambio: $0.00</div>
+            <button onclick="collectChange()" class="action-btn" style="background-color: #6666ff; color: white; margin-top: 5px;">
+                RECOGER
+            </button>
+        </div>
+        
+    </div>
+
+    <script>
+        let saldoUsuario = 100;
+        
+        const INVENTORY = {
+            'A1': { name: 'Refresco', price: 25, stack: ['R-3', 'R-2', 'R-1'], max: 3 },
+            'B2': { name: 'Galletas', price: 15, stack: ['G-3', 'G-2', 'G-1'], max: 3 },
+            'C3': { name: 'Agua', price: 10, stack: ['A-3', 'A-2', 'A-1'], max: 3 }
+        };
+
+        let changeQueue = []; 
+        let productToDeliver = null;
+
+        const elements = {
+            saldoDisplay: document.getElementById('saldoDisplay'),
+            displayMessage: document.getElementById('displayMessage'),
+            codeInput: document.getElementById('codeInput'),
+            productsGrid: document.getElementById('productsGrid'),
+            productDelivery: document.getElementById('productDelivery'),
+            changeQueueDisplay: document.getElementById('changeQueueDisplay'),
+        };
+        
+        function display(message, isError = false) {
+            elements.displayMessage.textContent = message.toUpperCase();
+            elements.displayMessage.style.color = isError ? '#ff0000' : '#00ff00';
+        }
+
+        function updateUI() {
+            elements.saldoDisplay.textContent = `$${saldoUsuario.toFixed(2)}`;
+            
+            elements.productsGrid.innerHTML = Object.keys(INVENTORY).map(code => {
+                const product = INVENTORY[code];
+                const count = product.stack.length;
+                const isEmpty = count === 0;
+
+                return `
+                    <div id="card-${code}" class="product-card ${isEmpty ? 'empty' : ''}" 
+                         onclick="${isEmpty ? 'display(\'PRODUCTO AGOTADO\', true)' : `elements.codeInput.value = '${code}'; display('CÓDIGO: ${code}')`}">
+                        <p style="font-weight: bold; margin: 0;">${code}</p>
+                        <p style="margin: 3px 0; font-size: 0.8em;">${product.name}</p>
+                        <p style="color: #0000cc; font-weight: bold; margin: 0;">$${product.price.toFixed(2)}</p>
+                        <p style="font-size: 0.7em; color: #ff0000; margin: 0;">Stock: ${count}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            elements.productDelivery.textContent = productToDeliver 
+                ? `PRODUCTO: ${productToDeliver} (PENDIENTE)` 
+                : 'ÁREA DE ENTREGA LIBRE';
+
+            const totalChange = changeQueue.reduce((acc, coinStr) => acc + parseFloat(coinStr.replace('$', '')), 0);
+            elements.changeQueueDisplay.textContent = `Cambio pendiente: $${totalChange.toFixed(2)}`;
+            
+            document.getElementById('buyBtn').disabled = productToDeliver !== null || changeQueue.length > 0;
+        }
+
+        function buyProduct() {
+            const code = elements.codeInput.value.toUpperCase().trim();
+            const product = INVENTORY[code];
+
+            if (productToDeliver !== null || changeQueue.length > 0) {
+                 display('RECOJA EL PRODUCTO/CAMBIO PENDIENTE', true);
+                 return;
+            }
+
+            if (!product) {
+                display('CÓDIGO INVÁLIDO. INGRESE A1, B2 O C3', true);
+                elements.codeInput.value = '';
+                return;
+            }
+
+            if (product.stack.length === 0) {
+                display(`ERROR: ${product.name} AGOTADO.`, true);
+                elements.codeInput.value = '';
+                return;
+            }
+
+            const price = product.price;
+
+            if (saldoUsuario < price) {
+                display(`SALDO INSUFICIENTE. NECESITAS $${price.toFixed(2)}`, true);
+                elements.codeInput.value = '';
+                return;
+            }
+
+            saldoUsuario -= price;
+
+            const soldItem = product.stack.pop(); 
+            productToDeliver = soldItem;
+
+            const change = 100 - saldoUsuario; 
+            
+            if (change > 0) {
+                calculateChangeQueue(change);
+                display(`VENTA OK. RECOJA PRODUCTO Y CAMBIO`, false);
+            } else {
+                display('VENTA OK. RECOJA SU PRODUCTO.', false);
+            }
+
+            elements.codeInput.value = '';
+            updateUI();
+        }
+
+        function calculateChangeQueue(amount) {
+            changeQueue = [];
+            let remaining = amount;
+            
+            const denominations = [20, 10, 5, 1]; 
+            
+            denominations.forEach(coin => {
+                let count = Math.floor(remaining / coin);
+                remaining -= count * coin;
+                
+                for (let i = 0; i < count; i++) {
+                    changeQueue.push(`$${coin}`); 
+                }
+            });
+        }
+        
+        function collectChange() {
+            if (productToDeliver !== null) {
+                const collectedProduct = productToDeliver;
+                productToDeliver = null;
+                display(`PRODUCTO ${collectedProduct} RECOGIDO.`, false);
+                
+            } else if (changeQueue.length > 0) {
+                const deliveredCoin = changeQueue.shift();
+                
+                display(`CAMBIO ENTREGADO: ${deliveredCoin}`, false);
+                
+                if (changeQueue.length === 0) {
+                    display('CAMBIO COMPLETO.', false);
+                }
+            } else {
+                display('NO HAY NADA PENDIENTE.', true);
+                return;
+            }
+            
+            updateUI();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUI();
+            display('BIENVENIDO. SALDO INICIAL: $100');
+        });
+    </script>
+</body>
+</html>

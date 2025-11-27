@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Colas Simples</title>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a148c;
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-add {
+            background-color: #66bb6a;
+            color: white;
+        }
+
+        .btn-remove {
+            background-color: #ef5350;
+            color: white;
+        }
+        
+        .queue-slots-container {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            min-height: 80px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 10px;
+            background-color: #e8eaf6;
+        }
+
+        .queue-slot {
+            width: 30%; 
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+            background-color: #f8f8f8; 
+            border: 1px dashed #aaa;
+            transition: all 0.5s ease;
+        }
+        
+        .queue-slot.active {
+            background-color: #9c27b0; 
+            color: white;
+        }
+        
+        .queue-slot.agoted-slot {
+            background-color: #fce4ec; 
+            color: #ef5350; 
+            border: 2px solid #ef5350; 
+            font-style: italic;
+            cursor: not-allowed;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Simulación de Colas</h1>
+        <p>Límite: 3 slots.</p>
+        
+        <!-- Controles -->
+        <div class="controls">
+            <button class="btn btn-add" onclick="addElement()">
+                <i></i> Añadir Elemento
+            </button>
+            <button class="btn btn-remove" onclick="removeElement()">
+                <i></i> Eliminar Elemento
+            </button>
+        </div>
+
+        <h2>Contenido de la Cola</h2>
+        
+        <!-- Slots de la Cola (3 Elementos) -->
+        <div id="queueSlotsContainer" class="queue-slots-container">
+            <div id="slot0" class="queue-slot"></div>
+            <div id="slot1" class="queue-slot"></div>
+            <div id="slot2" class="queue-slot"></div>
+        </div>
+        
+        <a href="index.html" style="margin-top: 30px; display: inline-block; color: #4a148c; text-decoration: none;">
+            ← Volver al Índice
+        </a>
+    </div>
+
+    <script>
+        let queue = [null, null, null]; 
+        const LIMITE = 3; 
+        
+        let nextInsertIndex = 0;
+        
+        let nextRemoveIndex = 0;
+        
+        let isAgotada = false; 
+        
+        const slots = [
+            document.getElementById('slot0'),
+            document.getElementById('slot1'),
+            document.getElementById('slot2')
+        ];
+        
+        function showMessage(title, isError = false) {
+            const prefix = isError ? "ERROR: " : "INFO: ";
+            alert(prefix + title); 
+        }
+
+        function updateDisplay() {
+            slots.forEach((slot, i) => {
+                const value = queue[i];
+                slot.className = 'queue-slot'; 
+                
+                if (value !== null) {
+                    slot.textContent = value;
+                    slot.classList.add('active');
+                } else if (i < nextRemoveIndex) {
+                    
+                    slot.textContent = `Slot BLOQUEADO`;
+                    slot.classList.add('agoted-slot');
+                } else {
+                    slot.textContent = "";
+                }
+            });
+        }
+
+        function addElement() {
+            if (isAgotada) {
+                showMessage("OVERFLOW. No se permite inserción.", true);
+                return;
+            }
+
+            if (nextInsertIndex === LIMITE) {
+                isAgotada = true; 
+                showMessage("OVERFLOW: La capacidad máxima (3 elementos) ha sido alcanzada.", true);
+                return;
+            }
+
+            const insertIndex = nextInsertIndex;
+            
+            const nuevoElemento = "E" + (insertIndex + 1);
+            
+            queue[insertIndex] = nuevoElemento;
+            
+            nextInsertIndex++; 
+            
+            if (nextInsertIndex === LIMITE) {
+                isAgotada = true;
+                showMessage("INFO: Elemento E3 insertado. Cola AGOTADA a partir de ahora (no más inserciones).", false);
+            }
+            
+            updateDisplay();
+        }
+
+        function removeElement() {
+            const removeIndex = nextRemoveIndex;
+
+            if (removeIndex >= nextInsertIndex) {
+                showMessage("UNDERFLOW: Cola vacía. No hay elementos para eliminar.", true);
+                return;
+            }
+
+            const elementoBorrado = queue[removeIndex];
+            
+            queue[removeIndex] = null;
+            
+            nextRemoveIndex++;
+            
+            updateDisplay();
+            showMessage("INFO: Elemento " + elementoBorrado + " eliminado (Slot " + removeIndex + "). El slot queda bloqueado.", false);
+        }
+
+        document.addEventListener('DOMContentLoaded', updateDisplay);
+    </script>
+</body>
+</html>

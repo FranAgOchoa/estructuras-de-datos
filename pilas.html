@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación Estricta de Pilas</title>
+    
+    <!-- ESTILOS (CSS) -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f0f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4a148c;
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-add {
+            background-color: #66bb6a;
+            color: white;
+        }
+
+        .btn-remove {
+            background-color: #ef5350;
+            color: white;
+        }
+        
+        .stack-slots-container {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            gap: 10px;
+            background-color: #e8eaf6;
+        }
+
+        .stack-slot {
+            width: 90%; 
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #333;
+            background-color: #f8f8f8; 
+            border: 1px dashed #aaa;
+            transition: all 0.5s ease;
+        }
+        
+        .stack-slot.active {
+            background-color: #2196f3;
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Simulación de Pila</h1>
+        <p>Límite: 3 elementos. <strong>LIFO</strong></p>
+        
+        <!-- Controles -->
+        <div class="controls">
+            <button class="btn btn-add" onclick="pushElement()">
+                <i></i> Añadir (Push)
+            </button>
+            <button class="btn btn-remove" onclick="popElement()">
+                <i></i> Eliminar (Pop)
+            </button>
+        </div>
+
+        <h2>Contenido de la Pila</h2>
+        
+        <div id="stackSlotsContainer" class="stack-slots-container">
+            <div id="slot2" class="stack-slot"></div>
+            <div id="slot1" class="stack-slot"></div>
+            <div id="slot0" class="stack-slot"></div>
+        </div>
+        
+        <a href="index.html" style="margin-top: 30px; display: inline-block; color: #4a148c; text-decoration: none;">
+            ← Volver al Índice
+        </a>
+    </div>
+
+    <script>
+        let stack = []; 
+        const LIMITE = 3; 
+        let elementCounter = 1;
+        
+       
+        let hasOverflowed = false; 
+        
+        const slots = [
+            document.getElementById('slot0'), 
+            document.getElementById('slot1'),
+            document.getElementById('slot2')  
+        ];
+        
+        function showMessage(title, isError = false) {
+            const prefix = isError ? "ERROR: " : "INFO: ";
+            alert(prefix + title); 
+        }
+
+        
+        function updateDisplay() {
+           
+            slots.forEach(slot => {
+                slot.textContent = "";
+                slot.className = 'stack-slot'; 
+            });
+
+           
+            stack.forEach((element, i) => {
+                const currentSlot = slots[i]; 
+                
+                if (currentSlot) {
+                    currentSlot.textContent = element;
+                    currentSlot.classList.add('active');
+                }
+            });
+        }
+
+        function pushElement() {
+            if (hasOverflowed) {
+                showMessage("OVERFLOW ESTRICTO: Pila agotada. No se permite insertar (Push).", true);
+                return;
+            }
+
+            if (stack.length === LIMITE) {
+                hasOverflowed = true; 
+                showMessage("OVERFLOW: Pila llena. Ya no se permitirá añadir más elementos NUNCA (Pila Agotada).", true);
+                return;
+            }
+
+
+            const nuevoElemento = "E" + elementCounter++;
+            stack.push(nuevoElemento);
+            updateDisplay();
+        }
+
+        function popElement() {
+            if (stack.length === 0) {
+                showMessage("UNDERFLOW: Pila vacía. No hay elementos para eliminar.", true);
+                return;
+            }
+
+            const elementoBorrado = stack.pop();
+            
+            updateDisplay();
+            showMessage("INFO: Elemento " + elementoBorrado + " eliminado. LIFO.", false);
+        }
+
+        document.addEventListener('DOMContentLoaded', updateDisplay);
+    </script>
+</body>
+</html>
