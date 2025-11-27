@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulación Estándar de Pilas</title>
+    <title>Simulación de Pilas</title>
     
     <style>
         :root {
@@ -165,7 +165,6 @@
             to { opacity: 1; transform: scale(1); }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -188,7 +187,7 @@
             <div id="slot1" class="stack-slot"></div>
             <div id="slot0" class="stack-slot"></div>
         </div>
-        <p style="font-size: 0.8em; color: #666; margin-top: 10px;">El elemento más alto (TOP) es el siguiente en salir.</p>
+        <p style="font-size: 0.8em; color: #666; margin-top: 10px;">El elemento LIFO es el siguiente en salir.</p>
         
         <a href="index.html" class="back-link">
             ← Volver al Índice
@@ -251,7 +250,7 @@
             if (stack.length === LIMITE) {
                 showMessage(
                     "OVERFLOW: Pila Llena", 
-                    `El límite es ${LIMITE} elementos. No se puede realizar el Push.`, 
+                    `No se puede realizar el Push.`, 
                     true
                 );
                 return;
@@ -260,7 +259,7 @@
             const nuevoElemento = "E" + elementCounter++;
             stack.push(nuevoElemento);
             updateDisplay();
-            showMessage("PUSH Exitoso", `Elemento ${nuevoElemento} ha entrado al TOP.`);
+            showMessage("PUSH Exitoso".`);
         }
 
         function popElement() {
